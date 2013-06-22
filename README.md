@@ -35,7 +35,7 @@ Next,
 
 ## Usage
 
-* Run ``wamp-portable.bat`` to start the process and launch WampServer.
+* Just launch ``wamp-portable.bat`` to start WampServer (do not launch wampmanager.exe).
 * A backup folder is created each time you launch wamp-portable in the ``backups`` directory. This folder contains all files edited by the wamp-portable script.
 
 ## License
