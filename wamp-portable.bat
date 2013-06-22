@@ -3,31 +3,32 @@ SETLOCAL EnableDelayedExpansion
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::                                                                                ::
-::  Wamp-Portable                                                                 ::
+::  Wamp Portable                                                                 ::
 ::                                                                                ::
-::  Author: Cr@zy                                                                 ::
-::  Contact: http://www.crazyws.fr                                                ::
+::  A DOS Batch script to make WampServer portable.                               ::
+::                                                                                ::
+::  Copyright (C) 2012-2013 Cr@zy <webmaster@crazyws.fr>                          ::
+::                                                                                ::
+::  Wamp-Portable is free software; you can redistribute it and/or modify         ::
+::  it under the terms of the GNU Lesser General Public License as published by   ::
+::  the Free Software Foundation, either version 3 of the License, or             ::
+::  (at your option) any later version.                                           ::
+::                                                                                ::
+::  Wamp-Portable is distributed in the hope that it will be useful,              ::
+::  but WITHOUT ANY WARRANTY; without even the implied warranty of                ::
+::  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                  ::
+::  GNU Lesser General Public License for more details.                           ::
+::                                                                                ::
+::  You should have received a copy of the GNU Lesser General Public License      ::
+::  along with this program. If not, see http://www.gnu.org/licenses/.            ::
+::                                                                                ::
 ::  Related post: http://goo.gl/g0rWG                                             ::
-::                                                                                ::
-::  This program is free software: you can redistribute it and/or modify it       ::
-::  under the terms of the GNU General Public License as published by the Free    ::
-::  Software Foundation, either version 3 of the License, or (at your option)     ::
-::  any later version.                                                            ::
-::                                                                                ::
-::  This program is distributed in the hope that it will be useful, but WITHOUT   ::
-::  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS ::
-::  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more         ::
-::  details.                                                                      ::
-::                                                                                ::
-::  You should have received a copy of the GNU General Public License along       ::
-::  with this program.  If not, see http://www.gnu.org/licenses/.                 ::
-::                                                                                ::
-::  Usage: wamp-portable.bat                                                      ::
+::  Usage: Just launch wamp-portable.bat in the same folder as wampmanager.exe    ::
 ::                                                                                ::
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE WamPortable v1.1
+TITLE Wamp Portable v1.2
 
 ECHO.
 ECHO.
@@ -39,8 +40,8 @@ ECHO    #   @   @ @@@@@ @ @ @ @@@@@ @   @ @@@@@   @   @@@@@ @@@@@ @     @@@@    
 ECHO    #    @@@  @   @ @   @ @     @   @ @  @    @   @   @ @   @ @     @       #
 ECHO    #    @ @  @   @ @   @ @     @@@@@ @   @   @   @   @ @@@@@ @@@@@ @@@@@   #
 ECHO    #                                                                       #
-ECHO    #   Author : Cr@zy                               Date    : 12/29/2012   #
-ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.1          #
+ECHO    #   Author : Cr@zy                               Date    : 06/22/2013   #
+ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.2          #
 ECHO    #                                                                       #
 ECHO    #########################################################################
 

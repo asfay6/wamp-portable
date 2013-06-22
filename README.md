@@ -1,22 +1,24 @@
-Wamp Portable
-=============
+# Wamp Portable
 
 A DOS Batch script to make [WampServer](http://www.wampserver.com/) portable.
 
-Tested on Windows XP, Windows Vista and Windows 7.
+Tested on :
+* Windows XP Pro SP2 32-bits
+* Windows XP Pro SP3 32-bits
+* Windows Vista Pro SP1 64-bits
+* Windows 7 Pro SP1 64-bits
+* Windows 8 Pro 64-bits
 
-Requirements
-------------
+## Requirements
 
 * [WampServer](http://www.wampserver.com/) minimal version 2.0 and 32-bit.
 * PHP minimal version 5.2.x
 * [WSH (Windows Script Host)](http://support.microsoft.com/kb/232211) : Open a command prompt and type ``wscript`` to check.
 * Be [Admin user](http://windows.microsoft.com/en-US/windows7/How-do-I-log-on-as-an-administrator).
 
-Installation
-------------
+## Installation
 
-Before running the script, you can change some variables.
+Before running the script, you can change some variables (line 70).
 
 * **$timezone** - The default timezone used by all date/time functions. Default : ``Europe/Paris``
 * **$enableLogs** - Enable wamp-portable log file. Generate ``wamp-portable.log`` file. Default : ``true``
@@ -31,13 +33,15 @@ Next,
 * Delete ``unins000.dat`` and ``unins000.exe`` from the copied folder.
 * Put the ``wamp-portable.bat`` in the same directory as ``wampmanager.exe``.
 
-Usage
------
+## Usage
 
 * Run ``wamp-portable.bat`` to start the process and launch WampServer.
 * A backup folder is created each time you launch wamp-portable in the ``backups`` directory. This folder contains all files edited by the wamp-portable script.
 
-More infos
-----------
+## License
+
+LGPL. See ``LICENSE`` for more details.
+
+## More infos
 
 http://www.crazyws.fr/dev/applis-et-scripts/wamp-portable-G5980.html
