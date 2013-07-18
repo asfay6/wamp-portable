@@ -28,7 +28,7 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.2
+TITLE Wamp Portable v1.3
 
 ECHO.
 ECHO.
@@ -40,13 +40,15 @@ ECHO    #   @   @ @@@@@ @ @ @ @@@@@ @   @ @@@@@   @   @@@@@ @@@@@ @     @@@@    
 ECHO    #    @@@  @   @ @   @ @     @   @ @  @    @   @   @ @   @ @     @       #
 ECHO    #    @ @  @   @ @   @ @     @@@@@ @   @   @   @   @ @@@@@ @@@@@ @@@@@   #
 ECHO    #                                                                       #
-ECHO    #   Author : Cr@zy                               Date    : 06/22/2013   #
-ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.2          #
+ECHO    #   Author : Cr@zy                               Date    : 07/18/2013   #
+ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.3          #
 ECHO    #                                                                       #
 ECHO    #########################################################################
 
 :: Wamp launcher
 SET wampLauncher=%TEMP%\wampLauncher.vbs
+SET wampLauncherScript=%TEMP%\wampLauncher.bat
+SET wampmanagerDaemon=%~dp0wampmanager.exe
 
 :: Get the latest version of PHP on Wamp
 FOR /R bin\php %%v IN (php.*exe) DO (
@@ -296,6 +298,7 @@ $apachePath = end($apacheArr);
 $apachePath = $apachePath['path'] . '\\' . $apachePath['bin'];
 $apacheScript = $apachePath . " -k uninstall -n wampapache";
 `$apacheScript`;
+`SC delete wampapache`;
 
 // Stop wampmysqld service
 logInfo("Stop wampmysqld service", true);
@@ -309,6 +312,7 @@ $mysqlPath = end($mysqlArr);
 $mysqlPath = $mysqlPath['path'] . '\\' . $mysqlPath['bin'];
 $mysqlScript = $mysqlPath . " --remove wampmysqld";
 `$mysqlScript`;
+`SC delete wampmysqld`;
 
 // First launch ?
 if (!is_dir($rootBackupPath)) {
@@ -405,6 +409,8 @@ $mysqlService = $mysqlPath . " " . $mysqlInstallParams;
 logInfo("Install wampmysqld service", true);
 echoListener("\n");
 `$mysqlService`;
+`TIMEOUT /T 2 /NOBREAK`;
+`NET START wampmysqld`;
 
 // Install wampapache service
 $apacheVersion = $wampConfig['apache']['apacheVersion'];
@@ -417,6 +423,8 @@ $apacheService = $apachePath . " " . $apacheInstallParams;
 logInfo("Install wampapache service", true);
 echoListener("\n");
 `$apacheService`;
+`TIMEOUT /T 2 /NOBREAK`;
+`NET START wampapache`;
 
 // Delete old backups
 if ($maxBackups > 0) {
@@ -471,7 +479,24 @@ echoListener("\n\nLaunch wampmanager");
 `ECHO. >>%wampLauncher%`;
 `ECHO WshShell.Run """" ^& WScript.Arguments(0) ^& """" ^& sargs, 0, False >>%wampLauncher%`;
 
-`wscript.exe %wampLauncher% wampmanager.exe`;
+`ECHO @ECHO OFF>%wampLauncherScript%`;
+`ECHO SETLOCAL EnableDelayedExpansion>>%wampLauncherScript%`;
+`ECHO.>>%wampLauncherScript%`;
+`ECHO start /w %wampmanagerDaemon%>>%wampLauncherScript%`;
+`ECHO.>>%wampLauncherScript%`;
+`ECHO NET STOP wampapache>>%wampLauncherScript%`;
+`ECHO $apacheScript>>%wampLauncherScript%`;
+`ECHO TIMEOUT /T 4 /NOBREAK>>%wampLauncherScript%`;
+`ECHO SC delete wampapache>>%wampLauncherScript%`;
+`ECHO.>>%wampLauncherScript%`;
+`ECHO NET STOP wampmysqld>>%wampLauncherScript%`;
+`ECHO $mysqlScript>>%wampLauncherScript%`;
+`ECHO TIMEOUT /T 4 /NOBREAK>>%wampLauncherScript%`;
+`ECHO SC delete wampmysqld>>%wampLauncherScript%`;
+`ECHO.>>%wampLauncherScript%`;
+`ECHO ENDLOCAL>>%wampLauncherScript%`;
+
+`wscript.exe %wampLauncher% %wampLauncherScript%`;
 
 if ($enableLogs) file_put_contents($logsPath, "@@@\n@@@ END WAMP-PORTABLE " . date('YmdHis') . "\n@@@\n\n\n\n\n\n\n\n\n\n\n\n", FILE_APPEND);
 
