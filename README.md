@@ -23,7 +23,9 @@ Before running the script, you can change some variables (line 70).
 * **$timezone** - The default timezone used by all date/time functions. Default : ``Europe/Paris``
 * **$enableLogs** - Enable wamp-portable log file. Generate ``wamp-portable.log`` file. Default : ``true``
 * **$autoLaunch** - Automatically closes the wamp-portable window. Default : ``false``
+* **$purgeWampLogs** - Purge logs from Wamp logs folder. Default ``false``;
 * **$maxBackups** - Maximum number of backups to keep (0 = unlimited). Default : ``10``
+* **$verbose** - Control the debug output (0=simple, 1=report, 2=debug). Default ``0``
 
 Next,
 
@@ -37,6 +39,13 @@ Next,
 
 * Just launch ``wamp-portable.bat`` to start WampServer (do not launch wampmanager.exe).
 * A backup folder is created each time you launch wamp-portable in the ``backups`` directory. This folder contains all files edited by the wamp-portable script.
+
+## Reporting an issue
+
+Before [reporting an issue](https://github.com/crazy-max/wamp-portable/issues), please :
+* Tell me what is your operating system and platform (eg. Windows 7 64-bits).
+* Tell me your WampServer version (eg. 2.2e).
+* Change these variables ``$enableLogs = true`` ; ``$verbose = 2`` and paste the content of the ``wamp-portable.log`` file.
 
 ## License
 

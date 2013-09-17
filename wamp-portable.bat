@@ -28,7 +28,7 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.3
+TITLE Wamp Portable v1.4
 
 ECHO.
 ECHO.
@@ -40,8 +40,8 @@ ECHO    #   @   @ @@@@@ @ @ @ @@@@@ @   @ @@@@@   @   @@@@@ @@@@@ @     @@@@    
 ECHO    #    @@@  @   @ @   @ @     @   @ @  @    @   @   @ @   @ @     @       #
 ECHO    #    @ @  @   @ @   @ @     @@@@@ @   @   @   @   @ @@@@@ @@@@@ @@@@@   #
 ECHO    #                                                                       #
-ECHO    #   Author : Cr@zy                               Date    : 07/18/2013   #
-ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.3          #
+ECHO    #   Author : Cr@zy                               Date    : 09/17/2013   #
+ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.4          #
 ECHO    #                                                                       #
 ECHO    #########################################################################
 
@@ -72,7 +72,9 @@ while(@ob_end_clean());
 $timezone = 'Europe/Paris';
 $enableLogs = true;
 $autoLaunch = false;
+$purgeWampLogs = false;
 $maxBackups = 10;
+$verbose = 0;
 
 ////////////////////////////////////////////////
 // No edits necessary beyond this line
@@ -84,9 +86,11 @@ $scriptName = basename(__FILE__);
 $wampConfigPath = getcwd() . '\\wampmanager.conf';
 $wampIniPath = getcwd() . '\\wampmanager.ini';
 $wampTplPath = getcwd() . '\\wampmanager.tpl';
+$wampLogsPath = getcwd() . '\\logs\\';
 $rootBackupPath = getcwd() . '\\backups\\';
 $backupsPath = $rootBackupPath . date('YmdHis');
 $logsPath = getcwd() . '\\wamp-portable.log';
+$tmpStdout = getcwd() . '\\wamp-portable.tmp';
 
 if ($enableLogs) file_put_contents($logsPath, "@@@\n@@@ START WAMP-PORTABLE " . date('YmdHis') . "\n@@@", FILE_APPEND);
 
@@ -97,8 +101,6 @@ function echoListener($str) {
     }
     echo $str;
 }
-
-echoListener("\n");
 
 function startWith($string, $search) {
     $length = strlen($search);
@@ -118,22 +120,28 @@ function exitApp() {
 }
 
 function logInfo($str, $status, $values=array(), $withKey=true, $withValue=true) {
+    global $verbose;
     $count = strlen($str);
     $dots = "";
     for ($i=$count; $i<=50; $i++) {
         $dots .= ".";
     }
-    echoListener(logTitle($str . " " . $dots . " " . ($status ? "OK" : "KO")));
-    if (!empty($values) && is_array($values)) {
-        foreach ($values as $key => $value) {
-            $count = strlen($key);
-            $spaces = "";
-            for ($i=$count; $i<=7; $i++) {
-                $spaces .= " ";
+    if ($verbose >= 1) {
+        echoListener(logTitle($str . " " . $dots . " " . ($status ? "OK" : "KO")));
+        if (!empty($values) && is_array($values)) {
+            foreach ($values as $key => $value) {
+                $count = strlen($key);
+                $spaces = "";
+                for ($i=$count; $i<=7; $i++) {
+                    $spaces .= " ";
+                }
+                echoListener("\n" . ($withKey ? $key : "") . ($withKey && $withValue ? $spaces . " : " : "") . ($withValue ? $value : ""));
             }
-            echoListener("\n" . ($withKey ? $key : "") . ($withKey && $withValue ? $spaces . " : " : "") . ($withValue ? $value : ""));
         }
+    } else {
+        echoListener("\n" . $str . " " . $dots . " " . ($status ? "OK" : "KO"));
     }
+    
     if (!$status) exitApp();
 }
 
@@ -142,6 +150,35 @@ function logTitle($title) {
     $logTitle .= $title;
     $logTitle .= "\n======================================================================";
     return $logTitle;
+}
+
+function execCommand($cmds, $echoStdout=true) {
+    global $verbose, $tmpStdout;
+    $logs = array();
+    $cmds = is_array($cmds) ? $cmds : array($cmds);
+    $stdout = " >\"" . $tmpStdout . "\" 2>&1";
+    foreach($cmds as $cmd) {
+        $log = "";
+        if ($verbose >= 1) echoListener("\n> " . $cmd);
+        `$cmd$stdout`;
+        if (file_exists($tmpStdout)) {
+            $lines = file($tmpStdout, FILE_IGNORE_NEW_LINES);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (!empty($line)) {
+                    $log .= $line . "\n";
+                    if ($verbose == 2 && $echoStdout) {
+                        echoListener("\n" . $line);
+                    }
+                }
+            }
+            if (!empty($log)) {
+                $logs[] = $log;
+            }
+            @unlink($tmpStdout);
+        }
+    }
+    return $logs;
 }
 
 function versionsAppList($dir, $substr, $bins) {
@@ -253,6 +290,12 @@ function deleteFolder($folderpath) {
     return true;
 }
 
+function get_extension($file) {
+    if (is_file($file) && preg_match('/^[^\x00]+\.([a-z0-9]+)$/i', $file, $matchResult)) {
+        return strtolower($matchResult[1]);
+    }
+}
+
 ////////////////////////////////////////////////
 // Start process
 ////////////////////////////////////////////////
@@ -283,36 +326,35 @@ logInfo("MySQL versions", !empty($mysqlArr), $mysqlArr, true, false);
 
 // Stop wampmanager
 logInfo("Stop wampmanager", true);
-echoListener("\n");
-`TASKKILL /IM wampmanager.exe /F`;
+$logsStopWampmanager = execCommand("TASKLIST /FI \"IMAGENAME eq wampmanager.exe\" /FO LIST | find \"wampmanager.exe\"");
+if (!empty($logsStopWampmanager)) {
+    execCommand("TASKKILL /IM wampmanager.exe /F");
+    execCommand("TIMEOUT /T 3 /NOBREAK", false);
+} elseif ($verbose == 2) {
+    echoListener("\nNot launched.");
+}
 
 // Stop wampapache service
 logInfo("Stop wampapache service", true);
-echoListener("\n");
-`NET STOP wampapache`;
+execCommand("NET STOP wampapache");
 
 // Uninstall wampapache service
 logInfo("Uninstall wampapache service", true);
-echoListener("\n");
 $apachePath = end($apacheArr);
 $apachePath = $apachePath['path'] . '\\' . $apachePath['bin'];
 $apacheScript = $apachePath . " -k uninstall -n wampapache";
-`$apacheScript`;
-`SC delete wampapache`;
+execCommand(array($apacheScript, "SC delete wampapache"));
 
 // Stop wampmysqld service
 logInfo("Stop wampmysqld service", true);
-echoListener("\n");
-`NET STOP wampmysqld`;
+execCommand("NET STOP wampmysqld");
 
 // Uninstall wampmysqld service
 logInfo("Uninstall wampmysqld service", true);
-echoListener("\n");
 $mysqlPath = end($mysqlArr);
 $mysqlPath = $mysqlPath['path'] . '\\' . $mysqlPath['bin'];
 $mysqlScript = $mysqlPath . " --remove wampmysqld";
-`$mysqlScript`;
-`SC delete wampmysqld`;
+execCommand(array($mysqlScript, "SC delete wampmysqld"));
 
 // First launch ?
 if (!is_dir($rootBackupPath)) {
@@ -398,6 +440,25 @@ foreach ($filesToScan as $file) {
 
 logInfo("Replace old path in files", count($rpcFiles) > 2, $rpcFiles, false);
 
+// Purge logs
+if ($purgeWampLogs) {
+    $purgeLogs = array();
+    if (is_dir($wampLogsPath)) {
+        $dir_handle = opendir($wampLogsPath);
+        if ($dir_handle) {
+            while ($file = readdir( $dir_handle )) {
+                $ext = get_extension($wampLogsPath . $file);
+                if ($file != '.' && $file != '..' && $ext == 'log') {
+                    $purgeLogs[] = $wampLogsPath . $file;
+                    @unlink($wampLogsPath . $file);
+                }
+            }
+            closedir($dir_handle);
+        }
+    }
+    logInfo("Purge logs", true, $purgeLogs, false);
+}
+
 // Install wampmysqld service
 $mysqlVersion = $wampConfig['mysql']['mysqlVersion'];
 $mysqlVersion = str_replace('"', '', $mysqlVersion);
@@ -407,10 +468,9 @@ $mysqlInstallParams = str_replace('"', '', $mysqlInstallParams);
 $mysqlService = $mysqlPath . " " . $mysqlInstallParams;
 
 logInfo("Install wampmysqld service", true);
-echoListener("\n");
-`$mysqlService`;
-`TIMEOUT /T 2 /NOBREAK`;
-`NET START wampmysqld`;
+execCommand($mysqlService);
+execCommand("TIMEOUT /T 1 /NOBREAK", false);
+execCommand("NET START wampmysqld");
 
 // Install wampapache service
 $apacheVersion = $wampConfig['apache']['apacheVersion'];
@@ -421,10 +481,9 @@ $apacheInstallParams = str_replace('"', '', $apacheInstallParams);
 $apacheService = $apachePath . " " . $apacheInstallParams;
 
 logInfo("Install wampapache service", true);
-echoListener("\n");
-`$apacheService`;
-`TIMEOUT /T 2 /NOBREAK`;
-`NET START wampapache`;
+execCommand($apacheService);
+execCommand("TIMEOUT /T 1 /NOBREAK", false);
+execCommand("NET START wampapache");
 
 // Delete old backups
 if ($maxBackups > 0) {
@@ -458,7 +517,7 @@ if (!$autoLaunch) {
 }
 
 // Launch wampmanager
-echoListener("\n\nLaunch wampmanager");
+echoListener("\n\nLaunch wampmanager\n\n");
 `ECHO set args = WScript.Arguments >%wampLauncher%`;
 `ECHO num = args.Count >>%wampLauncher%`;
 `ECHO. >>%wampLauncher%`;
