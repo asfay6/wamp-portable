@@ -28,7 +28,7 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.4
+TITLE Wamp Portable v1.5
 
 ECHO.
 ECHO.
@@ -40,8 +40,8 @@ ECHO    #   @   @ @@@@@ @ @ @ @@@@@ @   @ @@@@@   @   @@@@@ @@@@@ @     @@@@    
 ECHO    #    @@@  @   @ @   @ @     @   @ @  @    @   @   @ @   @ @     @       #
 ECHO    #    @ @  @   @ @   @ @     @@@@@ @   @   @   @   @ @@@@@ @@@@@ @@@@@   #
 ECHO    #                                                                       #
-ECHO    #   Author : Cr@zy                               Date    : 09/17/2013   #
-ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.4          #
+ECHO    #   Author : Cr@zy                               Date    : 09/22/2013   #
+ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.5          #
 ECHO    #                                                                       #
 ECHO    #########################################################################
 
@@ -302,7 +302,7 @@ function get_extension($file) {
 
 // Get wamp config
 $wampConfig = parse_ini_file($wampConfigPath, true);
-logInfo("Parse wampanager.conf", isset($wampConfig['main']['installDir']));
+logInfo("Parse wampmanager.conf", isset($wampConfig['main']['installDir']));
 
 // Get oldPath and newPath
 $oldPath = $wampConfig['main']['installDir'];
