@@ -28,7 +28,7 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.5
+TITLE Wamp Portable v1.6
 
 ECHO.
 ECHO.
@@ -40,8 +40,8 @@ ECHO    #   @   @ @@@@@ @ @ @ @@@@@ @   @ @@@@@   @   @@@@@ @@@@@ @     @@@@    
 ECHO    #    @@@  @   @ @   @ @     @   @ @  @    @   @   @ @   @ @     @       #
 ECHO    #    @ @  @   @ @   @ @     @@@@@ @   @   @   @   @ @@@@@ @@@@@ @@@@@   #
 ECHO    #                                                                       #
-ECHO    #   Author : Cr@zy                               Date    : 09/22/2013   #
-ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.5          #
+ECHO    #   Author : Cr@zy                               Date    : 09/25/2013   #
+ECHO    #   Email  : webmaster@crazyws.fr                Version : 1.6          #
 ECHO    #                                                                       #
 ECHO    #########################################################################
 
@@ -119,7 +119,7 @@ function exitApp() {
     exit();
 }
 
-function logInfo($str, $status, $values=array(), $withKey=true, $withValue=true) {
+function logInfo($str, $status, $values=array(), $withKey=true, $withValue=true, $customError=false) {
     global $verbose;
     $count = strlen($str);
     $dots = "";
@@ -127,7 +127,7 @@ function logInfo($str, $status, $values=array(), $withKey=true, $withValue=true)
         $dots .= ".";
     }
     if ($verbose >= 1) {
-        echoListener(logTitle($str . " " . $dots . " " . ($status ? "OK" : "KO")));
+        echoListener(logTitle($str . " " . $dots . " " . ($status ? "OK" : ($customError === false ? "KO" : $customError))));
         if (!empty($values) && is_array($values)) {
             foreach ($values as $key => $value) {
                 $count = strlen($key);
@@ -139,10 +139,12 @@ function logInfo($str, $status, $values=array(), $withKey=true, $withValue=true)
             }
         }
     } else {
-        echoListener("\n" . $str . " " . $dots . " " . ($status ? "OK" : "KO"));
+        echoListener("\n" . $str . " " . $dots . " " . ($status ? "OK" : ($customError === false ? "KO" : $customError)));
     }
     
-    if (!$status) exitApp();
+    if (!$status && $customError === false) {
+        exitApp();
+    }
 }
 
 function logTitle($title) {
@@ -183,7 +185,7 @@ function execCommand($cmds, $echoStdout=true) {
 
 function versionsAppList($dir, $substr, $bins) {
     $appArr = array();
-    if ($appDirHandle = opendir($dir)) {
+    if (is_dir($dir) && $appDirHandle = opendir($dir)) {
         while (false !== ($appDirName = readdir($appDirHandle))) {
             $appPath = getcwd() . "\\" . str_replace("/", "\\", $dir) . "\\" . $appDirName;
             if ($appDirName != '.' && $appDirName != '..' && is_dir($appPath) ) {
@@ -324,6 +326,10 @@ logInfo("Apache versions", !empty($apacheArr), $apacheArr, true, false);
 $mysqlArr = versionsAppList("bin/mysql", 5, array("bin/mysqld.exe", "bin/mysqld-nt.exe"));
 logInfo("MySQL versions", !empty($mysqlArr), $mysqlArr, true, false);
 
+// Get mariadb versions list
+$mariadbArr = versionsAppList("bin/mariadb", 7, array("bin/mysqld.exe", "bin/mysqld-nt.exe"));
+logInfo("MariaDB versions", !empty($mariadbArr), $mariadbArr, true, false, 'NOT FOUND');
+
 // Stop wampmanager
 logInfo("Stop wampmanager", true);
 $logsStopWampmanager = execCommand("TASKLIST /FI \"IMAGENAME eq wampmanager.exe\" /FO LIST | find \"wampmanager.exe\"");
@@ -356,6 +362,19 @@ $mysqlPath = $mysqlPath['path'] . '\\' . $mysqlPath['bin'];
 $mysqlScript = $mysqlPath . " --remove wampmysqld";
 execCommand(array($mysqlScript, "SC delete wampmysqld"));
 
+// Stop wampmariadb service
+logInfo("Stop wampmariadb service", true);
+execCommand("NET STOP wampmariadb");
+
+// Uninstall wampmariadb service
+if (!empty($mariadbArr)) {
+    logInfo("Uninstall wampmariadb service", true);
+    $mariadbPath = end($mariadbArr);
+    $mariadbPath = $mariadbPath['path'] . '\\' . $mariadbPath['bin'];
+    $mariadbScript = $mariadbPath . " --remove wampmariadb";
+    execCommand(array($mariadbScript, "SC delete wampmariadb"));
+}
+
 // First launch ?
 if (!is_dir($rootBackupPath)) {
     $backupsPath = $rootBackupPath . "#original";
@@ -386,6 +405,11 @@ foreach ($eltToScan as $type => $elt) {
         }
     } elseif ($type == 'mysql') {
         $versionsAppPaths = versionsAppPaths($mysqlArr, $type);
+        foreach ($versionsAppPaths as $value) {
+            $pathsToScan[] = $value;
+        }
+    } elseif ($type == 'mariadb' && !empty($mariadbArr)) {
+        $versionsAppPaths = versionsAppPaths($mariadbArr, $type);
         foreach ($versionsAppPaths as $value) {
             $pathsToScan[] = $value;
         }
@@ -471,6 +495,21 @@ logInfo("Install wampmysqld service", true);
 execCommand($mysqlService);
 execCommand("TIMEOUT /T 1 /NOBREAK", false);
 execCommand("NET START wampmysqld");
+
+if (!empty($mariadbArr)) {
+    // Install wampmariadb service
+    $mariadbVersion = $wampConfig['mariadb']['mariadbVersion'];
+    $mariadbVersion = str_replace('"', '', $mariadbVersion);
+    $mariadbPath = $mariadbArr[$mariadbVersion]['path'] . '\\' . $mariadbArr[$mariadbVersion]['bin'];
+    $mariadbInstallParams = $wampConfig['mariadb']['mariadbServiceInstallParams'];
+    $mariadbInstallParams = str_replace('"', '', $mariadbInstallParams);
+    $mariadbService = $mariadbPath . " " . $mariadbInstallParams;
+
+    logInfo("Install wampmariadb service", true);
+    execCommand($mariadbService);
+    execCommand("TIMEOUT /T 1 /NOBREAK", false);
+    execCommand("NET START wampmariadb");
+}
 
 // Install wampapache service
 $apacheVersion = $wampConfig['apache']['apacheVersion'];
