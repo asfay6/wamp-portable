@@ -53,4 +53,4 @@ LGPL. See ``LICENSE`` for more details.
 
 ## More infos
 
-http://www.crazyws.fr/dev/applis-et-scripts/wamp-portable-G5980.html
+http://www.crazyws.fr/dev/applis-et-scripts/wamportable-mettre-wampserver-sur-cle-usb-G5980.html
