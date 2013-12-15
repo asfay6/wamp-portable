@@ -8,6 +8,7 @@ Tested on :
 * Windows Vista Pro SP1 64-bits
 * Windows 7 Pro SP1 64-bits
 * Windows 8 Pro 64-bits
+* Windows 8.1 Pro 64-bits
 
 ## Requirements
 
@@ -15,17 +16,18 @@ Tested on :
 * PHP minimal version 5.2.x
 * [WSH (Windows Script Host)](http://support.microsoft.com/kb/232211) : Open a command prompt and type ``wscript`` to check.
 * Be [Admin user](http://windows.microsoft.com/en-US/windows7/How-do-I-log-on-as-an-administrator).
+* Add ``%WAMPPORTABLE%`` string to the [system environment variable](http://support.microsoft.com/kb/310519/en) ``PATH``.
 
 ## Installation
 
-Before running the script, you can change some variables (line 70).
+Before running the script, you can edit the configuration file ``wamp-portable.ini``.
 
-* **$timezone** - The default timezone used by all date/time functions. Default : ``Europe/Paris``
-* **$enableLogs** - Enable wamp-portable log file. Generate ``wamp-portable.log`` file. Default : ``true``
-* **$autoLaunch** - Automatically closes the wamp-portable window. Default : ``false``
-* **$purgeWampLogs** - Purge logs from Wamp logs folder. Default ``false``;
-* **$maxBackups** - Maximum number of backups to keep (0 = unlimited). Default : ``10``
-* **$verbose** - Control the debug output (0=simple, 1=report, 2=debug). Default ``0``
+* **timezone** - The default timezone used by all date/time functions. Default : ``Europe/Paris``
+* **enableLogs** - Enable wamp-portable log file. Generate ``wamp-portable.log`` file. Default : ``true``
+* **autoLaunch** - Automatically closes the wamp-portable window. Default : ``false``
+* **purgeWampLogs** - Purge logs from Wamp logs folder. Default ``false``;
+* **maxBackups** - Maximum number of backups to keep (0 = unlimited). Default : ``10``
+* **verbose** - Control the debug output (0=simple, 1=report, 2=debug). Default ``0``
 
 Next,
 
@@ -33,7 +35,7 @@ Next,
 * Copy wamp folder where ever you want.
 * Remove WampServer from [Programs and Features](http://windows.microsoft.com/en-US/windows7/Uninstall-or-change-a-program).
 * Delete ``unins000.dat`` and ``unins000.exe`` from the copied folder.
-* Put the ``wamp-portable.bat`` in the same directory as ``wampmanager.exe``.
+* Put the ``wamp-portable.bat`` and ``wamp-portable.ini`` files in the same directory as ``wampmanager.exe``.
 
 ## Usage
 
@@ -45,7 +47,7 @@ Next,
 Before [reporting an issue](https://github.com/crazy-max/wamp-portable/issues), please :
 * Tell me what is your operating system and platform (eg. Windows 7 64-bits).
 * Tell me your WampServer version (eg. 2.2e).
-* Change these variables ``$enableLogs = true`` ; ``$verbose = 2`` and paste the content of the ``wamp-portable.log`` file.
+* Change these variables in the ``wamp-portable.ini`` file ``enableLogs = true`` ; ``verbose = 2`` and paste the content of the ``wamp-portable.log`` file.
 
 ## License
 
