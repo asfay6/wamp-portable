@@ -28,13 +28,13 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.7
+TITLE Wamp Portable v1.8
 
 ECHO.
-ECHO # Wamp Portable v1.7
+ECHO # Wamp Portable v1.8
 ECHO Author  : Cr@zy
 ECHO Email   : webmaster@crazyws.fr
-ECHO Date    : 12/15/2013
+ECHO Date    : 01/21/2014
 
 :: Wamp launcher
 SET wampLauncher=%TEMP%\wampLauncher.vbs
@@ -306,6 +306,18 @@ function get_extension($file) {
     }
 }
 
+function isValidEnvVar($value) {
+	global $cwd;
+	$paths = explode(';', $value);
+	foreach ($paths as $path) {
+        $path = trim($path);
+		if (!empty($path) && !startWith($path, $cwd)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 function start_process() {
     global $cwd, $config, $scriptName, $wampConfigPath, $wampIniPath, $wampTplPath, $wampLogsPath, $rootBackupPath, $backupsPath, $logsPath, $tmpStdout;
     $currentEnvVar = execCommand("ECHO %envVar%");
@@ -348,8 +360,7 @@ function start_process() {
 
     // Set WAMPPORTABLE env var
     logInfo("Set WAMPPORTABLE env var", true);
-    execCommand("REG DELETE \"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\" /F /V WAMPPORTABLE 2^>nul");
-    execCommand("SETX -m WAMPPORTABLE \"\"");
+    execCommand("REG DELETE \"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\" /F /V WAMPPORTABLE 2>nul");
     $envVar = !empty($phpLast) ? $phpLast['path'] . ";" : "";
     $envVar .= !empty($apacheLast) ? $apacheLast['path'] . "\bin;" : "";
     if (!empty($mysqlLast)) {
@@ -357,10 +368,10 @@ function start_process() {
     } elseif (!empty($mariadbLast)) {
         $envVar .= $mariadbLast['path'] . "\bin;";
     }
-    execCommand("SETX -m WAMPPORTABLE \"" . $envVar . "\"");
+    execCommand("REG ADD \"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment\" /F /V WAMPPORTABLE /T REG_SZ /D \"" . $envVar . "\" 2>nul");
 
     // Check relaunch wamp-portable
-    if ($currentEnvVar == '%envVar%' || !startWith($currentEnvVar, $cwd)) {
+    if ($currentEnvVar == '%envVar%' || !isValidEnvVar($currentEnvVar)) {
         echoListener("\n\n======================================================================\n\n");
         echoListener("You have to restart Wamp Portable to apply some changes...\nPress any key to leave...\n\n");
         `pause`;
