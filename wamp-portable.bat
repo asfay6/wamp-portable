@@ -28,13 +28,13 @@ SETLOCAL EnableDelayedExpansion
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CLS
-TITLE Wamp Portable v1.8
+TITLE Wamp Portable v1.9
 
 ECHO.
-ECHO # Wamp Portable v1.8
+ECHO # Wamp Portable v1.9
 ECHO Author  : Cr@zy
 ECHO Email   : webmaster@crazyws.fr
-ECHO Date    : 01/21/2014
+ECHO Date    : 01/25/2014
 
 :: Wamp launcher
 SET wampLauncher=%TEMP%\wampLauncher.vbs
@@ -63,8 +63,8 @@ ECHO. >>%wampLauncher%
 ECHO WshShell.Run """" ^& WScript.Arguments(0) ^& """" ^& sargs, 0, False >>%wampLauncher%
 
 :: Retrieve WAMPPORTABLE env var if defined
-FOR /F "usebackq tokens=3" %%A IN (`REG QUERY "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /V "WAMPPORTABLE" 2^>nul ^| FIND "WAMPPORTABLE"`) DO (
-    SET envVar=%%A
+FOR /F "usebackq tokens=3*" %%A IN (`REG QUERY "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /V "WAMPPORTABLE" 2^>nul`) DO (
+    SET envVar=%%A %%B
 )
 
 :: Get the latest version of PHP on Wamp
@@ -73,7 +73,7 @@ FOR /R bin\php %%v IN (php.*exe) DO (
 )
 
 :: Run PHP
-%PHP% -n -d output_buffering=1 -f "%~f0"
+"%PHP%" -n -d output_buffering=1 -f "%~f0"
 EXIT /b
 
 :: wampserver-portable PHP script
@@ -310,6 +310,7 @@ function isValidEnvVar($value) {
 	global $cwd;
 	$paths = explode(';', $value);
 	foreach ($paths as $path) {
+        echoListener('\n' . $cwd . ' - ' . $path);
         $path = trim($path);
 		if (!empty($path) && !startWith($path, $cwd)) {
 			return false;
@@ -319,9 +320,10 @@ function isValidEnvVar($value) {
 }
 
 function start_process() {
-    global $cwd, $config, $scriptName, $wampConfigPath, $wampIniPath, $wampTplPath, $wampLogsPath, $rootBackupPath, $backupsPath, $logsPath, $tmpStdout;
+    global $cwd, $config, $scriptName, $wampConfigPath, $wampIniPath, $wampTplPath, $wampLogsPath, $rootBackupPath, $backupsPath, $logsPath, $tmpStdout, $apacheScript, $mysqlScript, $mariadbScript;
     $currentEnvVar = execCommand("ECHO %envVar%");
     $currentEnvVar = $currentEnvVar[0];
+    echoListener('\currentEnvVar: ' . $currentEnvVar);
 
     // Check wamp-portable.ini
     logInfo("Check wamp-portable.ini", is_array($config) && isset($config['timezone']));
@@ -395,7 +397,7 @@ function start_process() {
     // Uninstall wampapache service
     logInfo("Uninstall wampapache service", true);
     $apachePath = end($apacheArr);
-    $apachePath = $apachePath['path'] . '\\' . $apachePath['bin'];
+    $apachePath = "\"" . $apachePath['path'] . '\\' . $apachePath['bin'] . "\"";
     $apacheScript = $apachePath . " -k uninstall -n wampapache";
     execCommand(array($apacheScript, "SC delete wampapache"));
 
@@ -406,7 +408,7 @@ function start_process() {
     // Uninstall wampmysqld service
     logInfo("Uninstall wampmysqld service", true);
     $mysqlPath = end($mysqlArr);
-    $mysqlPath = $mysqlPath['path'] . '\\' . $mysqlPath['bin'];
+    $mysqlPath = "\"" . $mysqlPath['path'] . '\\' . $mysqlPath['bin'] . "\"";
     $mysqlScript = $mysqlPath . " --remove wampmysqld";
     execCommand(array($mysqlScript, "SC delete wampmysqld"));
 
@@ -418,7 +420,7 @@ function start_process() {
     if (!empty($mariadbArr)) {
         logInfo("Uninstall wampmariadb service", true);
         $mariadbPath = end($mariadbArr);
-        $mariadbPath = $mariadbPath['path'] . '\\' . $mariadbPath['bin'];
+        $mariadbPath = "\"" . $mariadbPath['path'] . '\\' . $mariadbPath['bin'] . "\"";
         $mariadbScript = $mariadbPath . " --remove wampmariadb";
         execCommand(array($mariadbScript, "SC delete wampmariadb"));
     }
@@ -539,21 +541,21 @@ function start_process() {
     logInfo("Prepare services", true);
     $mysqlVersion = $wampConfig['mysql']['mysqlVersion'];
     $mysqlVersion = str_replace('"', '', $mysqlVersion);
-    $mysqlPath = $mysqlArr[$mysqlVersion]['path'] . '\\' . $mysqlArr[$mysqlVersion]['bin'];
+    $mysqlPath = "\"" . $mysqlArr[$mysqlVersion]['path'] . '\\' . $mysqlArr[$mysqlVersion]['bin'] . "\"";
     $mysqlInstallParams = $wampConfig['mysql']['mysqlServiceInstallParams'];
     $mysqlInstallParams = str_replace('"', '', $mysqlInstallParams);
     $mysqlService = $mysqlPath . " " . $mysqlInstallParams;
     if (!empty($mariadbArr)) {
         $mariadbVersion = $wampConfig['mariadb']['mariadbVersion'];
         $mariadbVersion = str_replace('"', '', $mariadbVersion);
-        $mariadbPath = $mariadbArr[$mariadbVersion]['path'] . '\\' . $mariadbArr[$mariadbVersion]['bin'];
+        $mariadbPath = "\"" . $mariadbArr[$mariadbVersion]['path'] . '\\' . $mariadbArr[$mariadbVersion]['bin'] . "\"";
         $mariadbInstallParams = $wampConfig['mariadb']['mariadbServiceInstallParams'];
         $mariadbInstallParams = str_replace('"', '', $mariadbInstallParams);
         $mariadbService = $mariadbPath . " " . $mariadbInstallParams;
     }
     $apacheVersion = $wampConfig['apache']['apacheVersion'];
     $apacheVersion = str_replace('"', '', $apacheVersion);
-    $apachePath = $apacheArr[$apacheVersion]['path'] . '\\' . $apacheArr[$apacheVersion]['bin'];
+    $apachePath = "\"" . $apacheArr[$apacheVersion]['path'] . '\\' . $apacheArr[$apacheVersion]['bin'] . "\"";
     $apacheInstallParams = $wampConfig['apache']['apacheServiceInstallParams'];
     $apacheInstallParams = str_replace('"', '', $apacheInstallParams);
     $apacheService = $apachePath . " " . $apacheInstallParams;
@@ -610,10 +612,12 @@ start_process();
 
 // Launch wampmanager
 echoListener("\n\nLaunch wampmanager\n\n");
+global $apacheScript, $mysqlScript, $mariadbScript;
+
 `ECHO @ECHO OFF>%wampLauncherScript%`;
 `ECHO SETLOCAL EnableDelayedExpansion>>%wampLauncherScript%`;
 `ECHO.>>%wampLauncherScript%`;
-`ECHO start /w %wampmanagerDaemon%>>%wampLauncherScript%`;
+`ECHO start /w "" "%wampmanagerDaemon%">>%wampLauncherScript%`;
 `ECHO.>>%wampLauncherScript%`;
 `ECHO NET STOP wampapache>>%wampLauncherScript%`;
 `ECHO $apacheScript>>%wampLauncherScript%`;
@@ -624,6 +628,13 @@ echoListener("\n\nLaunch wampmanager\n\n");
 `ECHO $mysqlScript>>%wampLauncherScript%`;
 `ECHO TIMEOUT /T 4 /NOBREAK>>%wampLauncherScript%`;
 `ECHO SC delete wampmysqld>>%wampLauncherScript%`;
+if (!empty($mariadbScript)) {
+    `ECHO.>>%wampLauncherScript%`;
+    `ECHO NET STOP wampmariadb>>%wampLauncherScript%`;
+    `ECHO $mariadbScript>>%wampLauncherScript%`;
+    `ECHO TIMEOUT /T 4 /NOBREAK>>%wampLauncherScript%`;
+    `ECHO SC delete wampmariadb>>%wampLauncherScript%`;
+}
 `ECHO.>>%wampLauncherScript%`;
 `ECHO ENDLOCAL>>%wampLauncherScript%`;
 
